@@ -1,9 +1,6 @@
 import { QueryState, QueryBuilder } from './types';
-
-const Monad = <T>(state: QueryState) => ({
-  map: (fn: (s: QueryState) => QueryState) => Monad<T>(fn(state)),
-  fold: () => state
-})
+import { Monad } from './helpers/monad';
+import { createBoolBuilder } from './bool-builder';
 
 export const createQueryBuilder = <T>(state: QueryState = {}): QueryBuilder<T> => ({
   match: (field, value) =>
@@ -17,6 +14,8 @@ export const createQueryBuilder = <T>(state: QueryState = {}): QueryBuilder<T> =
         }
       })).fold()
     ),
+
+    bool: () => createBoolBuilder<T>(state),
 
     build: () => state
 })
