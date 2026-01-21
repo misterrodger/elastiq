@@ -3,6 +3,7 @@ import { query } from '..';
 type TestIndex = {
   title: string;
   price: number;
+  size: number;
 };
 
 describe('QueryBuilder', () => {
@@ -85,46 +86,46 @@ describe('QueryBuilder', () => {
       `);
     });
 
-    // it.skip('should build an exists query', () => {
-    //   // const result = query<TestIndex>().exists('title').build();
+    it('should build an exists query', () => {
+      const result = query<TestIndex>().exists('title').build();
 
-    //   expect(result).toMatchInlineSnapshot(`
-    //            {
-    //              "query": {
-    //                "exists": {
-    //                  "field": "title",
-    //                },
-    //              },
-    //            }
-    //         `);
-    // });
-
-    it.skip('should build a prefix query', () => {
-      // const result = query<TestIndex>().prefix('title', 'test').build();
-      // expect(result).toMatchInlineSnapshot(`
-      //          {
-      //            "query": {
-      //              "prefix": {
-      //                "title": "test",
-      //              },
-      //            },
-      //          }
-      //       `);
+      expect(result).toMatchInlineSnapshot(`
+               {
+                 "query": {
+                   "exists": {
+                     "field": "title",
+                   },
+                 },
+               }
+            `);
     });
 
-    // it('should build a wildcard query', () => {
-    //   const result = query<TestIndex>().wildcard('title', 'test').build();
+    it('should build a prefix query', () => {
+      const result = query<TestIndex>().prefix('title', 'test').build();
+      expect(result).toMatchInlineSnapshot(`
+               {
+                 "query": {
+                   "prefix": {
+                     "title": "test",
+                   },
+                 },
+               }
+            `);
+    });
 
-    //   expect(result).toMatchInlineSnapshot(`
-    //            {
-    //              "query": {
-    //                "wildcard": {
-    //                  "title": "test",
-    //                },
-    //              },
-    //            }
-    //         `);
-    // });
+    it('should build a wildcard query', () => {
+      const result = query<TestIndex>().wildcard('title', 'test').build();
+
+      expect(result).toMatchInlineSnapshot(`
+               {
+                 "query": {
+                   "wildcard": {
+                     "title": "test",
+                   },
+                 },
+               }
+            `);
+    });
 
     // it('should add a conditional query when defined', () => {
     //   const title = 'title exists';
@@ -386,6 +387,7 @@ describe('QueryBuilder', () => {
       const result = query<TestIndex>()
         .bool()
         .must((q) => q.range('price', { gt: 1, lt: 100 }))
+        .must((q) => q.range('size', { gte: 1, lte: 100 }))
         .build();
 
       expect(result).toMatchInlineSnapshot(`
@@ -399,6 +401,89 @@ describe('QueryBuilder', () => {
                       "gt": 1,
                       "lt": 100,
                     },
+                  },
+                },
+                {
+                  "range": {
+                    "size": {
+                      "gte": 1,
+                      "lte": 100,
+                    },
+                  },
+                },
+              ],
+            },
+          },
+        }
+      `);
+    });
+
+    it('should build a bool with exists', () => {
+      const result = query<TestIndex>()
+        .bool()
+        .must((q) => q.exists('price'))
+        .must((q) => q.exists('title'))
+        .build();
+
+      expect(result).toMatchInlineSnapshot(`
+        {
+          "query": {
+            "bool": {
+              "must": [
+                {
+                  "exists": {
+                    "field": "price",
+                  },
+                },
+                {
+                  "exists": {
+                    "field": "title",
+                  },
+                },
+              ],
+            },
+          },
+        }
+      `);
+    });
+
+    it('should build a bool with prefix', () => {
+      const result = query<TestIndex>()
+        .bool()
+        .must((q) => q.prefix('title', 'pr'))
+        .build();
+
+      expect(result).toMatchInlineSnapshot(`
+        {
+          "query": {
+            "bool": {
+              "must": [
+                {
+                  "prefix": {
+                    "title": "pr",
+                  },
+                },
+              ],
+            },
+          },
+        }
+      `);
+    });
+
+    it('should build a bool with wildcard', () => {
+      const result = query<TestIndex>()
+        .bool()
+        .must((q) => q.wildcard('price', 'pr'))
+        .build();
+
+      expect(result).toMatchInlineSnapshot(`
+        {
+          "query": {
+            "bool": {
+              "must": [
+                {
+                  "wildcard": {
+                    "price": "pr",
                   },
                 },
               ],

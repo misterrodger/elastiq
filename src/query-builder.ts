@@ -1,13 +1,15 @@
 import { QueryState, QueryBuilder, ClauseBuilder } from './types';
 
 const createClauseBuilder = <T>(): ClauseBuilder<T> => ({
+  matchAll: () => ({ match_all: {} }),
   match: (field, value) => ({ match: { [field]: value } }),
   term: (field, value) => ({ term: { [field]: value } }),
   terms: (field, value) => ({ terms: { [field]: value } }),
   range: (field, conditions) => ({ range: { [field]: conditions } }),
-  matchAll: () => ({ match_all: {} })
-
-  // TODO: exists, prefix, wildcard, when conditional
+  exists: (field) => ({ exists: { field } }),
+  prefix: (field, value) => ({ prefix: { [field]: value } }),
+  wildcard: (field, value) => ({ wildcard: { [field]: value } })
+  // TODO: when conditional
 });
 
 const clauseBuilder = createClauseBuilder();
@@ -67,8 +69,17 @@ export const createQueryBuilder = <T>(
     createQueryBuilder<T>({ ...state, query: { term: { [field]: value } } }),
   terms: (field, value) =>
     createQueryBuilder<T>({ ...state, query: { terms: { [field]: value } } }),
+  exists: (field) =>
+    createQueryBuilder<T>({ ...state, query: { exists: { field } } }),
+  prefix: (field, value) =>
+    createQueryBuilder<T>({ ...state, query: { prefix: { [field]: value } } }),
+  wildcard: (field, value) =>
+    createQueryBuilder<T>({
+      ...state,
+      query: { wildcard: { [field]: value } }
+    }),
 
-  // TODO: exists, prefix, wildcard, when conditional
+  // TODO: when conditional
 
   range: (field, conditions) =>
     createQueryBuilder({ ...state, query: { range: { [field]: conditions } } }),
