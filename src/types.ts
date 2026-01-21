@@ -6,6 +6,7 @@ export type QueryBuilder<T> = {
   bool: () => BoolBuilder<T>;
 
   // Full-text queries
+  matchAll: () => QueryBuilder<T>;
   match: <K extends keyof T>(field: K, value: T[K]) => QueryBuilder<T>;
   // multiMatch TBD
   // matchPhrase TBD
@@ -40,5 +41,5 @@ export type BoolBuilder<T> = {
   filter: (fn: (q: QueryBuilder<T>) => QueryBuilder<T>) => BoolBuilder<T>;
   minimumShouldMatch: (n: number) => BoolBuilder<T>;
 
-  build: () => any;
+  _build: () => any;
 };

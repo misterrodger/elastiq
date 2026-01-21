@@ -7,69 +7,53 @@ export const createQueryBuilder = <T>(
 ): QueryBuilder<T> => ({
   bool: () => createBoolBuilder<T>(state),
 
+  matchAll: () =>
+    createQueryBuilder<T>({
+      ...state,
+      query: {
+        match_all: {}
+      }
+    }),
+
   match: (field, value) =>
-    createQueryBuilder<T>(
-      Monad<T>(state)
-        .map((s) => ({
-          ...s,
-          query: {
-            match: {
-              [field]: value
-            }
-          }
-        }))
-        .fold()
-    ),
+    createQueryBuilder<T>({
+      ...state,
+      query: {
+        match: {
+          [field]: value
+        }
+      }
+    }),
 
   term: (field, value) =>
-    createQueryBuilder<T>(
-      Monad<T>(state)
-        .map((s) => ({
-          ...s,
-          query: { term: { [field]: value } }
-        }))
-        .fold()
-    ),
+    createQueryBuilder<T>({
+      ...state,
+      query: { term: { [field]: value } }
+    }),
 
   terms: (field, values) =>
-    createQueryBuilder<T>(
-      Monad<T>(state)
-        .map((s) => ({
-          ...s,
-          query: { terms: { [field]: values } }
-        }))
-        .fold()
-    ),
+    createQueryBuilder<T>({
+      ...state,
+      query: { terms: { [field]: values } }
+    }),
 
   exists: (field) =>
-    createQueryBuilder<T>(
-      Monad<T>(state)
-        .map((s) => ({
-          ...s,
-          query: { exists: { field } }
-        }))
-        .fold()
-    ),
+    createQueryBuilder<T>({
+      ...state,
+      query: { exists: { field } }
+    }),
 
   prefix: (field, value) =>
-    createQueryBuilder<T>(
-      Monad<T>(state)
-        .map((s) => ({
-          ...s,
-          query: { prefix: { [field]: value } }
-        }))
-        .fold()
-    ),
+    createQueryBuilder<T>({
+      ...state,
+      query: { prefix: { [field]: value } }
+    }),
 
   wildcard: (field, value) =>
-    createQueryBuilder<T>(
-      Monad<T>(state)
-        .map((s) => ({
-          ...s,
-          query: { wildcard: { [field]: value } }
-        }))
-        .fold()
-    ),
+    createQueryBuilder<T>({
+      ...state,
+      query: { wildcard: { [field]: value } }
+    }),
 
   when: (condition, builder) =>
     condition ? builder : createQueryBuilder<T>(state),

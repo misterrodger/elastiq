@@ -96,5 +96,5 @@ export const createBoolBuilder = <T>(
         .fold()
     ),
 
-  build: () => state
+  _build: () => state
 });

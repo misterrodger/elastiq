@@ -6,21 +6,19 @@ type TestIndex = {
 };
 
 describe('QueryBuilder', () => {
-  it('should build a top-level match query', () => {
-    const result = query<TestIndex>().match('title', 'test title').build();
-
-    expect(result).toMatchInlineSnapshot(`
-     {
-       "query": {
-         "match": {
-           "title": "test title",
-         },
-       },
-     }
-    `);
-  });
-
   describe('Root-level', () => {
+    it('should build a match_all query', () => {
+      const result = query<TestIndex>().matchAll().build();
+
+      expect(result).toMatchInlineSnapshot(`
+        {
+          "query": {
+            "match_all": {},
+          },
+        }
+      `);
+    });
+
     it('should build a match query', () => {
       const result = query<TestIndex>().match('title', 'test title').build();
 
@@ -39,14 +37,14 @@ describe('QueryBuilder', () => {
       const result = query<TestIndex>().term('title', 'test title').build();
 
       expect(result).toMatchInlineSnapshot(`
-       {
-         "query": {
-           "term": {
-             "title": "test title",
-           },
-         },
-       }
-      `);
+               {
+                 "query": {
+                   "term": {
+                     "title": "test title",
+                   },
+                 },
+               }
+            `);
     });
 
     it('should build a terms query', () => {
@@ -55,59 +53,59 @@ describe('QueryBuilder', () => {
         .build();
 
       expect(result).toMatchInlineSnapshot(`
-       {
-         "query": {
-           "terms": {
-             "title": [
-               "test",
-               "title",
-             ],
-           },
-         },
-       }
-      `);
+               {
+                 "query": {
+                   "terms": {
+                     "title": [
+                       "test",
+                       "title",
+                     ],
+                   },
+                 },
+               }
+            `);
     });
 
     it('should build an exists query', () => {
       const result = query<TestIndex>().exists('title').build();
 
       expect(result).toMatchInlineSnapshot(`
-       {
-         "query": {
-           "exists": {
-             "field": "title",
-           },
-         },
-       }
-      `);
+               {
+                 "query": {
+                   "exists": {
+                     "field": "title",
+                   },
+                 },
+               }
+            `);
     });
 
     it('should build a prefix query', () => {
       const result = query<TestIndex>().prefix('title', 'test').build();
 
       expect(result).toMatchInlineSnapshot(`
-       {
-         "query": {
-           "prefix": {
-             "title": "test",
-           },
-         },
-       }
-      `);
+               {
+                 "query": {
+                   "prefix": {
+                     "title": "test",
+                   },
+                 },
+               }
+            `);
     });
 
     it('should build a wildcard query', () => {
       const result = query<TestIndex>().wildcard('title', 'test').build();
 
       expect(result).toMatchInlineSnapshot(`
-       {
-         "query": {
-           "wildcard": {
-             "title": "test",
-           },
-         },
-       }
-      `);
+               {
+                 "query": {
+                   "wildcard": {
+                     "title": "test",
+                   },
+                 },
+               }
+            `);
     });
 
     it('should add a conditional query when defined', () => {
@@ -115,23 +113,23 @@ describe('QueryBuilder', () => {
       const result = query<TestIndex>()
         .bool()
         .filter((q) => q.when(title, q.term('title', title)))
-        .build();
+        ._build();
 
       expect(result).toMatchInlineSnapshot(`
-       {
-         "query": {
-           "bool": {
-             "filter": [
                {
-                 "term": {
-                   "title": "title exists",
+                 "query": {
+                   "bool": {
+                     "filter": [
+                       {
+                         "term": {
+                           "title": "title exists",
+                         },
+                       },
+                     ],
+                   },
                  },
-               },
-             ],
-           },
-         },
-       }
-      `);
+               }
+            `);
     });
 
     it('should NOT add a conditional query when undefined', () => {
@@ -139,19 +137,19 @@ describe('QueryBuilder', () => {
       const result = query<TestIndex>()
         .bool()
         .filter((q) => q.when(title, q.term('title', title!))) // TBD - fix this
-        .build();
+        ._build();
 
       expect(result).toMatchInlineSnapshot(`
-       {
-         "query": {
-           "bool": {
-             "filter": [
-               undefined,
-             ],
-           },
-         },
-       }
-      `);
+               {
+                 "query": {
+                   "bool": {
+                     "filter": [
+                       undefined,
+                     ],
+                   },
+                 },
+               }
+            `);
     });
   });
 
@@ -160,7 +158,7 @@ describe('QueryBuilder', () => {
       const result = query<TestIndex>()
         .bool()
         .must((q) => q.match('title', 'test title'))
-        .build();
+        ._build();
 
       expect(result).toMatchInlineSnapshot(`
             {
@@ -183,7 +181,7 @@ describe('QueryBuilder', () => {
       const result = query<TestIndex>()
         .bool()
         .should((q) => q.match('title', 'test title'))
-        .build();
+        ._build();
 
       expect(result).toMatchInlineSnapshot(`
             {
@@ -206,7 +204,7 @@ describe('QueryBuilder', () => {
       const result = query<TestIndex>()
         .bool()
         .mustNot((q) => q.match('title', 'test title'))
-        .build();
+        ._build();
 
       expect(result).toMatchInlineSnapshot(`
             {
@@ -229,7 +227,7 @@ describe('QueryBuilder', () => {
       const result = query<TestIndex>()
         .bool()
         .filter((q) => q.match('title', 'test title'))
-        .build();
+        ._build();
 
       expect(result).toMatchInlineSnapshot(`
             {
@@ -254,7 +252,7 @@ describe('QueryBuilder', () => {
         .must((q) => q.match('title', 'test title'))
         .must((q) => q.match('price', 42))
         .minimumShouldMatch(1)
-        .build();
+        ._build();
 
       expect(result).toMatchInlineSnapshot(`
             {
