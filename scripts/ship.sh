@@ -2,14 +2,17 @@
 
 set -e
 
-echo "Running tests..."
-npm run test
+echo "Running audit..."
+npm run audit
 
 echo "Running linter..."
 npm run lint
 
 echo "Running formatter..."
 npm run format
+
+echo "Running tests..."
+npm run test
 
 echo "Staging all changes..."
 git add .

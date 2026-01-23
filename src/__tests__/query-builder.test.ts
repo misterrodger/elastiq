@@ -8,7 +8,94 @@ type TestIndex = {
 };
 
 describe('QueryBuilder', () => {
-  describe('Root-level', () => {
+  describe('Meta properties', () => {
+    it('should add from', () => {
+      const result = query<TestIndex>().match('title', 'test').from(1).build();
+
+      expect(result).toMatchInlineSnapshot(`
+        {
+          "from": 1,
+          "query": {
+            "match": {
+              "title": "test",
+            },
+          },
+        }
+      `);
+    });
+    it('should add to', () => {
+      const result = query<TestIndex>().match('title', 'test').to(1).build();
+
+      expect(result).toMatchInlineSnapshot(`
+        {
+          "query": {
+            "match": {
+              "title": "test",
+            },
+          },
+          "to": 1,
+        }
+      `);
+    });
+    it('should add size', () => {
+      const result = query<TestIndex>().match('title', 'test').size(1).build();
+
+      expect(result).toMatchInlineSnapshot(`
+        {
+          "query": {
+            "match": {
+              "title": "test",
+            },
+          },
+          "size": 1,
+        }
+      `);
+    });
+
+    it('should add source', () => {
+      const result = query<TestIndex>()
+        .match('title', 'test')
+        ._source(['title', 'size'])
+        .build();
+
+      expect(result).toMatchInlineSnapshot(`
+        {
+          "_source": [
+            "title",
+            "size",
+          ],
+          "query": {
+            "match": {
+              "title": "test",
+            },
+          },
+        }
+      `);
+    });
+
+    it('should add sort', () => {
+      const result = query<TestIndex>()
+        .match('title', 'test')
+        .sort('size', 'asc')
+        .build();
+
+      expect(result).toMatchInlineSnapshot(`
+        {
+          "query": {
+            "match": {
+              "title": "test",
+            },
+          },
+          "sort": [
+            {
+              "size": "asc",
+            },
+          ],
+        }
+      `);
+    });
+  });
+  describe('Root-level queries', () => {
     it('should build a match_all query', () => {
       const result = query<TestIndex>().matchAll().build();
 
