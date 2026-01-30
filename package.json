@@ -1,8 +1,9 @@
 {
   "name": "elastiq",
-  "version": "0.1.0",
-  "description": "Type-safe, lightweight Elasticsearch query builder",
+  "version": "0.1.0-beta.0",
+  "description": "Type-safe, lightweight Elasticsearch query builder with fluent API",
   "main": "dist/index.js",
+  "module": "dist/index.js",
   "types": "dist/index.d.ts",
   "files": [
     "dist"
@@ -15,7 +16,11 @@
     "lint": "eslint src --ext .ts",
     "format": "prettier --write \"src/**/*.ts\"",
     "audit": "better-npm-audit audit --level=high",
-    "prepublishOnly": "npm run build && npm test"
+    "prepublishOnly": "npm run build && npm test && npm run lint",
+    "type-check": "tsc --noEmit"
+  },
+  "engines": {
+    "node": ">=16.0.0"
   },
   "repository": {
     "type": "git",

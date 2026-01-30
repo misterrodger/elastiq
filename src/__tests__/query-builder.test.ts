@@ -1367,6 +1367,7 @@ describe('QueryBuilder', () => {
     describe('nested query', () => {
       it('should build a nested query with single clause', () => {
         const result = query<TestIndex>()
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
           .nested('type' as any, (q) =>
             q.match('comments.author', 'john')
           )
@@ -1390,6 +1391,7 @@ describe('QueryBuilder', () => {
 
       it('should build a nested query with multiple term queries', () => {
         const result = query<TestIndex>()
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
           .nested('name' as any, (q) =>
             q.term('status', 'approved')
           )
@@ -1414,6 +1416,7 @@ describe('QueryBuilder', () => {
       it('should build a nested query with score_mode option', () => {
         const result = query<TestIndex>()
           .nested(
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
             'type' as any,
             (q) => q.match('comments.author', 'john'),
             { score_mode: 'sum' }
@@ -1440,6 +1443,7 @@ describe('QueryBuilder', () => {
       it('should build a nested query with avg score_mode', () => {
         const result = query<TestIndex>()
           .nested(
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
             'name' as any,
             (q) => q.term('status', 'approved'),
             { score_mode: 'avg' }
@@ -1466,6 +1470,7 @@ describe('QueryBuilder', () => {
       it('should build a nested query with min score_mode', () => {
         const result = query<TestIndex>()
           .nested(
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
             'type' as any,
             (q) => q.term('status', 'pending'),
             { score_mode: 'min' }
@@ -1491,6 +1496,7 @@ describe('QueryBuilder', () => {
 
       it('should build nested query with pagination', () => {
         const result = query<TestIndex>()
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
           .nested('type' as any, (q: any) =>
             q.match('author', 'john')
           )
@@ -1549,6 +1555,7 @@ describe('QueryBuilder', () => {
         const result = query<TestIndex>()
           .when(
             searchTerm,
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
             (q) => q.match('type', searchTerm as any)
           )
           ?.build();

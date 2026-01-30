@@ -164,6 +164,7 @@ export const createQueryBuilder = <T>(
     }),
 
   nested: (path, fn, options) => {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const nestedQuery = fn(createClauseBuilder<any>());
     return createQueryBuilder<T>({
       ...state,
@@ -218,6 +219,7 @@ export const createQueryBuilder = <T>(
     createQueryBuilder({ ...state, track_total_hits }),
 
   highlight: (fields, options) => {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const highlightFields: Record<string, any> = {};
     for (const field of fields) {
       highlightFields[field as string] = options || {};
