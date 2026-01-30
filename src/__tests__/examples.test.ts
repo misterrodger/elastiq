@@ -1,4 +1,4 @@
-import { query } from '..';
+import { query, aggregations } from '..';
 
 /**
  * Real-world usage examples demonstrating elastiq's capabilities.
@@ -38,6 +38,23 @@ type Document = {
   title: string;
   tags: string[];
   published_date: string;
+};
+
+type Restaurant = {
+  id: string;
+  name: string;
+  cuisine: string;
+  location: { lat: number; lon: number };
+  rating: number;
+};
+
+type Store = {
+  id: string;
+  name: string;
+  coordinates: { lat: number; lon: number };
+  district: string;
+  rating: number;
+  item_count: number;
 };
 
 describe('Real-world Usage Examples', () => {
@@ -853,6 +870,212 @@ describe('Real-world Usage Examples', () => {
           "size": 10,
         }
       `);
+    });
+  });
+
+  describe('Further features TBC: Aggregations & Geo Queries', () => {
+    it('should aggregate products by category with price statistics', () => {
+      query<Product>()
+        .match('description', 'electronics')
+        .range('price', { gte: 100 })
+        .build();
+
+      const agg = aggregations<Product>()
+        .terms('by_category', 'category', { size: 10 })
+        .subAgg((sub) =>
+          sub
+            .avg('average_price', 'price')
+            .max('highest_price', 'price')
+            .min('lowest_price', 'price')
+        )
+        .build();
+
+      expect(agg).toMatchInlineSnapshot(`
+        {
+          "by_category": {
+            "aggs": {
+              "average_price": {
+                "avg": {
+                  "field": "price",
+                },
+              },
+              "highest_price": {
+                "max": {
+                  "field": "price",
+                },
+              },
+              "lowest_price": {
+                "min": {
+                  "field": "price",
+                },
+              },
+            },
+            "terms": {
+              "field": "category",
+              "size": 10,
+            },
+          },
+        }
+      `);
+    });
+
+    it('should analyze products sold over time with daily breakdown', () => {
+      const agg = aggregations<Product>()
+        .dateHistogram('sales_timeline', 'created_at', {
+          interval: 'day',
+          min_doc_count: 1
+        })
+        .subAgg((sub) =>
+          sub
+            .sum('daily_revenue', 'price')
+            .cardinality('unique_categories', 'category', {
+              precision_threshold: 100
+            })
+        )
+        .build();
+
+      expect(agg).toMatchInlineSnapshot(`
+        {
+          "sales_timeline": {
+            "aggs": {
+              "daily_revenue": {
+                "sum": {
+                  "field": "price",
+                },
+              },
+              "unique_categories": {
+                "cardinality": {
+                  "field": "category",
+                  "precision_threshold": 100,
+                },
+              },
+            },
+            "date_histogram": {
+              "field": "created_at",
+              "interval": "day",
+              "min_doc_count": 1,
+            },
+          },
+        }
+      `);
+    });
+
+    it('should find restaurants near a location', () => {
+      const result = query<Restaurant>()
+        .match('cuisine', 'italian')
+        .geoDistance(
+          'location',
+          { lat: 40.7128, lon: -74.006 },
+          { distance: '5km' }
+        )
+        .size(20)
+        .build();
+
+      expect(result).toMatchInlineSnapshot(`
+        {
+          "query": {
+            "geo_distance": {
+              "distance": "5km",
+              "location": {
+                "lat": 40.7128,
+                "lon": -74.006,
+              },
+            },
+          },
+          "size": 20,
+        }
+      `);
+    });
+
+    it('should search in a geographic bounding box', () => {
+      const result = query<Restaurant>()
+        .geoBoundingBox('location', {
+          top_left: { lat: 40.8, lon: -74.1 },
+          bottom_right: { lat: 40.7, lon: -74.0 }
+        })
+        .build();
+
+      expect(result).toMatchInlineSnapshot(`
+        {
+          "query": {
+            "geo_bounding_box": {
+              "location": {
+                "bottom_right": {
+                  "lat": 40.7,
+                  "lon": -74,
+                },
+                "top_left": {
+                  "lat": 40.8,
+                  "lon": -74.1,
+                },
+              },
+            },
+          },
+        }
+      `);
+    });
+
+    it('should find products matching a pattern', () => {
+      const result = query<Product>()
+        .regexp('category', 'elec.*', { flags: 'CASE_INSENSITIVE' })
+        .build();
+
+      expect(result).toMatchInlineSnapshot(`
+        {
+          "query": {
+            "regexp": {
+              "category": {
+                "flags": "CASE_INSENSITIVE",
+                "value": "elec.*",
+              },
+            },
+          },
+        }
+      `);
+    });
+
+    it('should use constant_score for efficient filtering', () => {
+      const result = query<Product>()
+        .constantScore((q) => q.term('category', 'electronics'), { boost: 1.2 })
+        .build();
+
+      expect(result).toMatchInlineSnapshot(`
+        {
+          "query": {
+            "constant_score": {
+              "boost": 1.2,
+              "filter": {
+                "term": {
+                  "category": "electronics",
+                },
+              },
+            },
+          },
+        }
+      `);
+    });
+
+    it('should combine geo search with aggregations for store analytics', () => {
+      const queryResult = query<Store>()
+        .match('name', 'convenience')
+        .geoDistance(
+          'coordinates',
+          { lat: 40.7128, lon: -74.006 },
+          { distance: '10km' }
+        )
+        .build();
+
+      const agg = aggregations<Store>()
+        .terms('by_district', 'district', { size: 5 })
+        .subAgg((sub) =>
+          sub
+            .avg('avg_rating', 'rating')
+            .valueCount('total_items', 'item_count')
+        )
+        .build();
+
+      expect(queryResult.query?.geo_distance).toBeDefined();
+      expect(agg.by_district).toBeDefined();
     });
   });
 });

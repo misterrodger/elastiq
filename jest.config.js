@@ -3,6 +3,7 @@ module.exports = {
   testEnvironment: 'node',
   roots: ['<rootDir>/src'],
   testMatch: ['**/__tests__/**/*.test.ts'],
+  verbose: true,
   collectCoverageFrom: [
     'src/**/*.ts',
     '!src/**/*.d.ts',

@@ -32,6 +32,35 @@ export type HighlightOptions = {
   post_tags?: string[];
 };
 
+export type RegexpOptions = {
+  flags?: string;
+  max_determinized_states?: number;
+  boost?: number;
+};
+
+export type ConstantScoreOptions = {
+  boost?: number;
+};
+
+export type GeoDistanceOptions = {
+  distance: string | number;
+  unit?: 'mi' | 'km' | 'mm' | 'cm' | 'm' | 'yd' | 'ft' | 'in' | 'nmi';
+  distance_type?: 'arc' | 'plane';
+};
+
+export type GeoBoundingBoxOptions = {
+  top_left?: { lat: number; lon: number };
+  bottom_right?: { lat: number; lon: number };
+  top?: number;
+  left?: number;
+  bottom?: number;
+  right?: number;
+};
+
+export type GeoPolygonOptions = {
+  points: Array<{ lat: number; lon: number }>;
+};
+
 export type QueryState<T> = {
   query?: any;
   from?: number;
@@ -158,6 +187,30 @@ export type QueryBuilder<T> = {
   highlight: (
     fields: Array<keyof T>,
     options?: HighlightOptions
+  ) => QueryBuilder<T>;
+  // Geo queries
+  geoDistance: <K extends keyof T>(
+    field: K,
+    center: { lat: number; lon: number },
+    options: GeoDistanceOptions
+  ) => QueryBuilder<T>;
+  geoBoundingBox: <K extends keyof T>(
+    field: K,
+    options: GeoBoundingBoxOptions
+  ) => QueryBuilder<T>;
+  geoPolygon: <K extends keyof T>(
+    field: K,
+    options: GeoPolygonOptions
+  ) => QueryBuilder<T>;
+  // Pattern and scoring queries
+  regexp: <K extends keyof T>(
+    field: K,
+    value: string,
+    options?: RegexpOptions
+  ) => QueryBuilder<T>;
+  constantScore: (
+    fn: (q: ClauseBuilder<T>) => any,
+    options?: ConstantScoreOptions
   ) => QueryBuilder<T>;
   build: () => QueryState<T>;
 };

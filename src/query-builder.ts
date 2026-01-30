@@ -232,5 +232,64 @@ export const createQueryBuilder = <T>(
     });
   },
 
+  // Geo queries
+  geoDistance: (field, center, options) =>
+    createQueryBuilder<T>({
+      ...state,
+      query: {
+        geo_distance: {
+          [String(field)]: center,
+          ...options
+        }
+      }
+    }),
+
+  geoBoundingBox: (field, options) =>
+    createQueryBuilder<T>({
+      ...state,
+      query: {
+        geo_bounding_box: {
+          [String(field)]: options
+        }
+      }
+    }),
+
+  geoPolygon: (field, options) =>
+    createQueryBuilder<T>({
+      ...state,
+      query: {
+        geo_polygon: {
+          [String(field)]: options
+        }
+      }
+    }),
+
+  // Pattern and scoring queries
+  regexp: (field, value, options) => {
+    if (!options || Object.keys(options).length === 0) {
+      return createQueryBuilder<T>({
+        ...state,
+        query: { regexp: { [String(field)]: value } }
+      });
+    }
+    return createQueryBuilder<T>({
+      ...state,
+      query: { regexp: { [String(field)]: { value, ...options } } }
+    });
+  },
+
+  constantScore: (fn, options) => {
+    const clause = fn(clauseBuilder);
+    return createQueryBuilder<T>({
+      ...state,
+      query: {
+        constant_score: {
+          filter: clause,
+          ...(options && Object.keys(options).length > 0 ? options : {})
+        }
+      }
+    });
+  },
+
   build: () => state
 });

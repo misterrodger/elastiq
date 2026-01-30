@@ -1,10 +1,20 @@
-import { query } from '..';
+import { query, aggregations } from '..';
 
 type TestIndex = {
   type: string;
   name: string;
   price: number;
   size: number;
+};
+
+type TestIndex2 = {
+  title: string;
+  description: string;
+  price: number;
+  date: string;
+  location: { lat: number; lon: number };
+  rating: number;
+  category: string;
 };
 
 describe('QueryBuilder', () => {
@@ -2264,4 +2274,638 @@ describe('QueryBuilder', () => {
       });
     });
   });
+
+describe('More TBC Features', () => {
+  describe('Aggregations', () => {
+    describe('Bucket Aggregations', () => {
+      it('should create a terms aggregation', () => {
+        const result = aggregations<TestIndex2>()
+          .terms('category_agg', 'category', { size: 10 })
+          .build();
+
+        expect(result).toMatchInlineSnapshot(`
+          {
+            "category_agg": {
+              "terms": {
+                "field": "category",
+                "size": 10,
+              },
+            },
+          }
+        `);
+      });
+
+      it('should create a terms aggregation without options', () => {
+        const result = aggregations<TestIndex2>()
+          .terms('category_agg', 'category')
+          .build();
+
+        expect(result).toMatchInlineSnapshot(`
+          {
+            "category_agg": {
+              "terms": {
+                "field": "category",
+              },
+            },
+          }
+        `);
+      });
+
+      it('should create a date histogram aggregation', () => {
+        const result = aggregations<TestIndex2>()
+          .dateHistogram('sales_by_date', 'date', {
+            interval: 'day',
+            min_doc_count: 1
+          })
+          .build();
+
+        expect(result).toMatchInlineSnapshot(`
+          {
+            "sales_by_date": {
+              "date_histogram": {
+                "field": "date",
+                "interval": "day",
+                "min_doc_count": 1,
+              },
+            },
+          }
+        `);
+      });
+
+      it('should create a range aggregation', () => {
+        const result = aggregations<TestIndex2>()
+          .range('price_ranges', 'price', {
+            ranges: [{ to: 100 }, { from: 100, to: 500 }, { from: 500 }]
+          })
+          .build();
+
+        expect(result).toMatchInlineSnapshot(`
+          {
+            "price_ranges": {
+              "range": {
+                "field": "price",
+                "ranges": [
+                  {
+                    "to": 100,
+                  },
+                  {
+                    "from": 100,
+                    "to": 500,
+                  },
+                  {
+                    "from": 500,
+                  },
+                ],
+              },
+            },
+          }
+        `);
+      });
+
+      it('should create a histogram aggregation', () => {
+        const result = aggregations<TestIndex2>()
+          .histogram('price_histogram', 'price', { interval: 50 })
+          .build();
+
+        expect(result).toMatchInlineSnapshot(`
+          {
+            "price_histogram": {
+              "histogram": {
+                "field": "price",
+                "interval": 50,
+              },
+            },
+          }
+        `);
+      });
+    });
+
+    describe('Metric Aggregations', () => {
+      it('should create an avg aggregation', () => {
+        const result = aggregations<TestIndex2>()
+          .avg('avg_price', 'price')
+          .build();
+
+        expect(result).toMatchInlineSnapshot(`
+          {
+            "avg_price": {
+              "avg": {
+                "field": "price",
+              },
+            },
+          }
+        `);
+      });
+
+      it('should create a sum aggregation', () => {
+        const result = aggregations<TestIndex2>()
+          .sum('total_price', 'price')
+          .build();
+
+        expect(result).toMatchInlineSnapshot(`
+          {
+            "total_price": {
+              "sum": {
+                "field": "price",
+              },
+            },
+          }
+        `);
+      });
+
+      it('should create a min aggregation', () => {
+        const result = aggregations<TestIndex2>()
+          .min('min_price', 'price')
+          .build();
+
+        expect(result).toMatchInlineSnapshot(`
+          {
+            "min_price": {
+              "min": {
+                "field": "price",
+              },
+            },
+          }
+        `);
+      });
+
+      it('should create a max aggregation', () => {
+        const result = aggregations<TestIndex2>()
+          .max('max_price', 'price')
+          .build();
+
+        expect(result).toMatchInlineSnapshot(`
+          {
+            "max_price": {
+              "max": {
+                "field": "price",
+              },
+            },
+          }
+        `);
+      });
+
+      it('should create a cardinality aggregation', () => {
+        const result = aggregations<TestIndex2>()
+          .cardinality('unique_categories', 'category', {
+            precision_threshold: 100
+          })
+          .build();
+
+        expect(result).toMatchInlineSnapshot(`
+          {
+            "unique_categories": {
+              "cardinality": {
+                "field": "category",
+                "precision_threshold": 100,
+              },
+            },
+          }
+        `);
+      });
+
+      it('should create a percentiles aggregation', () => {
+        const result = aggregations<TestIndex2>()
+          .percentiles('price_percentiles', 'price', {
+            percents: [25, 50, 75, 95]
+          })
+          .build();
+
+        expect(result).toMatchInlineSnapshot(`
+          {
+            "price_percentiles": {
+              "percentiles": {
+                "field": "price",
+                "percents": [
+                  25,
+                  50,
+                  75,
+                  95,
+                ],
+              },
+            },
+          }
+        `);
+      });
+
+      it('should create a stats aggregation', () => {
+        const result = aggregations<TestIndex2>()
+          .stats('price_stats', 'price')
+          .build();
+
+        expect(result).toMatchInlineSnapshot(`
+          {
+            "price_stats": {
+              "stats": {
+                "field": "price",
+              },
+            },
+          }
+        `);
+      });
+
+      it('should create a value_count aggregation', () => {
+        const result = aggregations<TestIndex2>()
+          .valueCount('rating_count', 'rating')
+          .build();
+
+        expect(result).toMatchInlineSnapshot(`
+          {
+            "rating_count": {
+              "value_count": {
+                "field": "rating",
+              },
+            },
+          }
+        `);
+      });
+    });
+
+    describe('Sub-aggregations', () => {
+      it('should add sub-aggregations to a bucket aggregation', () => {
+        const result = aggregations<TestIndex2>()
+          .terms('categories', 'category', { size: 10 })
+          .subAgg((agg) => agg.avg('avg_price', 'price'))
+          .build();
+
+        expect(result).toMatchInlineSnapshot(`
+          {
+            "categories": {
+              "aggs": {
+                "avg_price": {
+                  "avg": {
+                    "field": "price",
+                  },
+                },
+              },
+              "terms": {
+                "field": "category",
+                "size": 10,
+              },
+            },
+          }
+        `);
+      });
+
+      it('should add multiple sub-aggregations', () => {
+        const result = aggregations<TestIndex2>()
+          .terms('categories', 'category')
+          .subAgg((agg) =>
+            agg.avg('avg_price', 'price').max('max_rating', 'rating')
+          )
+          .build();
+
+        expect(result).toMatchInlineSnapshot(`
+          {
+            "categories": {
+              "aggs": {
+                "avg_price": {
+                  "avg": {
+                    "field": "price",
+                  },
+                },
+                "max_rating": {
+                  "max": {
+                    "field": "rating",
+                  },
+                },
+              },
+              "terms": {
+                "field": "category",
+              },
+            },
+          }
+        `);
+      });
+    });
+  });
+
+  describe('Geo Queries', () => {
+    it('should create a geo_distance query', () => {
+      const result = query<TestIndex2>()
+        .geoDistance(
+          'location',
+          { lat: 40.7128, lon: -74.006 },
+          { distance: '10km' }
+        )
+        .build();
+
+      expect(result).toMatchInlineSnapshot(`
+        {
+          "query": {
+            "geo_distance": {
+              "distance": "10km",
+              "location": {
+                "lat": 40.7128,
+                "lon": -74.006,
+              },
+            },
+          },
+        }
+      `);
+    });
+
+    it('should create a geo_distance query with options', () => {
+      const result = query<TestIndex2>()
+        .geoDistance(
+          'location',
+          { lat: 40.7128, lon: -74.006 },
+          {
+            distance: '10km',
+            unit: 'mi',
+            distance_type: 'plane'
+          }
+        )
+        .build();
+
+      expect(result).toMatchInlineSnapshot(`
+        {
+          "query": {
+            "geo_distance": {
+              "distance": "10km",
+              "distance_type": "plane",
+              "location": {
+                "lat": 40.7128,
+                "lon": -74.006,
+              },
+              "unit": "mi",
+            },
+          },
+        }
+      `);
+    });
+
+    it('should create a geo_bounding_box query', () => {
+      const result = query<TestIndex2>()
+        .geoBoundingBox('location', {
+          top_left: { lat: 40.8, lon: -74.1 },
+          bottom_right: { lat: 40.7, lon: -74.0 }
+        })
+        .build();
+
+      expect(result).toMatchInlineSnapshot(`
+        {
+          "query": {
+            "geo_bounding_box": {
+              "location": {
+                "bottom_right": {
+                  "lat": 40.7,
+                  "lon": -74,
+                },
+                "top_left": {
+                  "lat": 40.8,
+                  "lon": -74.1,
+                },
+              },
+            },
+          },
+        }
+      `);
+    });
+
+    it('should create a geo_polygon query', () => {
+      const result = query<TestIndex2>()
+        .geoPolygon('location', {
+          points: [
+            { lat: 40.7128, lon: -74.006 },
+            { lat: 40.8, lon: -74.1 },
+            { lat: 40.7, lon: -73.9 }
+          ]
+        })
+        .build();
+
+      expect(result).toMatchInlineSnapshot(`
+        {
+          "query": {
+            "geo_polygon": {
+              "location": {
+                "points": [
+                  {
+                    "lat": 40.7128,
+                    "lon": -74.006,
+                  },
+                  {
+                    "lat": 40.8,
+                    "lon": -74.1,
+                  },
+                  {
+                    "lat": 40.7,
+                    "lon": -73.9,
+                  },
+                ],
+              },
+            },
+          },
+        }
+      `);
+    });
+
+    it('should combine geo_distance with other queries', () => {
+      const result = query<TestIndex2>()
+        .match('category', 'restaurants')
+        .geoDistance(
+          'location',
+          { lat: 40.7128, lon: -74.006 },
+          { distance: '5km' }
+        )
+        .build();
+
+      expect(result).toMatchInlineSnapshot(`
+        {
+          "query": {
+            "geo_distance": {
+              "distance": "5km",
+              "location": {
+                "lat": 40.7128,
+                "lon": -74.006,
+              },
+            },
+          },
+        }
+      `);
+    });
+  });
+
+  describe('Pattern and Scoring Queries', () => {
+    it('should create a regexp query', () => {
+      const result = query<TestIndex2>().regexp('category', 'rest.*').build();
+
+      expect(result).toMatchInlineSnapshot(`
+        {
+          "query": {
+            "regexp": {
+              "category": "rest.*",
+            },
+          },
+        }
+      `);
+    });
+
+    it('should create a regexp query with options', () => {
+      const result = query<TestIndex2>()
+        .regexp('category', 'rest.*', { flags: 'CASE_INSENSITIVE', boost: 2.0 })
+        .build();
+
+      expect(result).toMatchInlineSnapshot(`
+        {
+          "query": {
+            "regexp": {
+              "category": {
+                "boost": 2,
+                "flags": "CASE_INSENSITIVE",
+                "value": "rest.*",
+              },
+            },
+          },
+        }
+      `);
+    });
+
+    it('should create a constant_score query', () => {
+      const result = query<TestIndex2>()
+        .constantScore((q) => q.term('category', 'restaurants'))
+        .build();
+
+      expect(result).toMatchInlineSnapshot(`
+        {
+          "query": {
+            "constant_score": {
+              "filter": {
+                "term": {
+                  "category": "restaurants",
+                },
+              },
+            },
+          },
+        }
+      `);
+    });
+
+    it('should create a constant_score query with boost', () => {
+      const result = query<TestIndex2>()
+        .constantScore((q) => q.term('category', 'restaurants'), { boost: 1.5 })
+        .build();
+
+      expect(result).toMatchInlineSnapshot(`
+        {
+          "query": {
+            "constant_score": {
+              "boost": 1.5,
+              "filter": {
+                "term": {
+                  "category": "restaurants",
+                },
+              },
+            },
+          },
+        }
+      `);
+    });
+
+    it('should combine constant_score with other queries', () => {
+      const result = query<TestIndex2>()
+        .match('title', 'test')
+        .constantScore((cb) => cb.term('category', 'restaurants'))
+        .build();
+
+      expect(result).toMatchInlineSnapshot(`
+        {
+          "query": {
+            "constant_score": {
+              "filter": {
+                "term": {
+                  "category": "restaurants",
+                },
+              },
+            },
+          },
+        }
+      `);
+    });
+  });
+
+  describe('Integration: Queries with Aggregations', () => {
+    it('should combine complex query with aggregations in result structure', () => {
+      const queryResult = query<TestIndex2>()
+        .bool()
+        .must((q) => q.match('title', 'restaurant'))
+        .filter((q) => q.range('price', { gte: 50, lte: 200 }))
+        .build();
+
+      const aggResult = aggregations<TestIndex2>()
+        .terms('by_category', 'category', { size: 10 })
+        .subAgg((agg) =>
+          agg.avg('avg_price', 'price').max('max_rating', 'rating')
+        )
+        .build();
+
+      expect(queryResult).toBeDefined();
+      expect(aggResult).toBeDefined();
+      expect(queryResult.query?.bool?.must).toBeDefined();
+      expect(aggResult.by_category).toBeDefined();
+    });
+
+    it('should create aggregations for geo-based queries', () => {
+      const agg = aggregations<TestIndex2>()
+        .dateHistogram('reviews_over_time', 'date', { interval: 'month' })
+        .subAgg((agg) => agg.avg('avg_rating', 'rating'))
+        .build();
+
+      expect(agg).toMatchInlineSnapshot(`
+        {
+          "reviews_over_time": {
+            "aggs": {
+              "avg_rating": {
+                "avg": {
+                  "field": "rating",
+                },
+              },
+            },
+            "date_histogram": {
+              "field": "date",
+              "interval": "month",
+            },
+          },
+        }
+      `);
+    });
+  });
+
+  describe('Complex Real-world Scenarios', () => {
+    it('should build a complete analytics query with multiple aggregations', () => {
+      const agg = aggregations<TestIndex2>()
+        .terms('by_category', 'category', { size: 20 })
+        .subAgg((sub) =>
+          sub
+            .dateHistogram('sales_by_date', 'date', { interval: 'day' })
+            .subAgg((sub2) => sub2.sum('total_sales', 'price'))
+        )
+        .build();
+
+      expect(agg.by_category?.aggs?.sales_by_date).toBeDefined();
+      expect(
+        agg.by_category?.aggs?.sales_by_date?.aggs?.total_sales
+      ).toBeDefined();
+    });
+
+    it('should create a location-based search with aggregations', () => {
+      const queryResult = query<TestIndex2>()
+        .match('title', 'coffee')
+        .geoDistance(
+          'location',
+          { lat: 40.7128, lon: -74.006 },
+          { distance: '10km' }
+        )
+        .build();
+
+      const agg = aggregations<TestIndex2>()
+        .terms('by_category', 'category')
+        .subAgg((sub) => sub.avg('avg_rating', 'rating'))
+        .build();
+
+      expect(queryResult.query?.geo_distance).toBeDefined();
+      expect(agg.by_category?.aggs?.avg_rating).toBeDefined();
+    });
+  });
+});
 });
